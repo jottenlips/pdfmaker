@@ -32,5 +32,4 @@ const generatePdf = (ids)=> {
 }
 
 const ids = process.argv.slice(2)
-console.log(ids)
 generatePdf(ids).then(pdf => console.log(pdf, 'QR code PDF has been generated'))
