@@ -8,17 +8,21 @@ const generatePdf = (ids)=> {
     const stream = doc.pipe(DataUri());
     doc.pipe(fs.createWriteStream('output.pdf'));
     return new Promise((resolve, _reject) => {
+        let x = 20;
         ids.map((id, index) => {
             const qr = qrcode.imageSync(id, { type: 'png' });
             const position = {
-                x: 20,
-                y: index * 100 + 20
+                x,
+                y: index % 4 * 100 + 20
             }
             doc.image(qr, 
                 position.x,
                 position.y,
                 {fit: [100, 100]},
             )
+            if (index % 4 === 0 && index > 4) {
+                x += 100;
+            }
         })
         doc.end();
         let result = '';
