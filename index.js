@@ -3,17 +3,23 @@ var DataUri = require('datauri-stream')
 const qrcode = require('qr-image')
 const fs = require('fs')
 
-const generatePdf = (id)=> {
+const generatePdf = (ids)=> {
     const doc = new PDFDocument();
     const stream = doc.pipe(DataUri());
-    const qr = qrcode.imageSync(id, { type: 'png' });
     doc.pipe(fs.createWriteStream('output.pdf'));
     return new Promise((resolve, _reject) => {
-        doc.image(qr, 
-            10,
-            10,
-            {fit: [100, 100]},
-        )
+        ids.map((id, index) => {
+            const qr = qrcode.imageSync(id, { type: 'png' });
+            const position = {
+                x: 20,
+                y: index * 100 + 20
+            }
+            doc.image(qr, 
+                position.x,
+                position.y,
+                {fit: [100, 100]},
+            )
+        })
         doc.end();
         let result = '';
         stream.on('data', function(chunk) {
@@ -25,6 +31,6 @@ const generatePdf = (id)=> {
     })
 }
 
-process.argv.forEach((_val, _index, arguments) => {
-    generatePdf(arguments[2]).then(pdf => console.log(pdf, 'QR code PDF has been generated'))
-});
+const ids = process.argv.slice(2)
+console.log(ids)
+generatePdf(ids).then(pdf => console.log(pdf, 'QR code PDF has been generated'))
