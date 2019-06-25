@@ -1,5 +1,5 @@
 const PDFDocument = require('pdfkit');
-var DataUri = require('datauri-stream')
+const DataUri = require('datauri-stream')
 const qrcode = require('qr-image')
 const fs = require('fs')
 
