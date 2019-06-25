@@ -1,42 +1,39 @@
 const PDFDocument = require('pdfkit');
-const DataUri = require('datauri-stream')
 const qrcode = require('qr-image')
 const fs = require('fs')
 
 const generatePdf = (ids)=> {
     const doc = new PDFDocument();
-    const stream = doc.pipe(DataUri());
-    doc.pipe(fs.createWriteStream('output.pdf'));
-    return new Promise((resolve, _reject) => {
-        let x = 20;
-        ids.map((id, index) => {
-            const qr = qrcode.imageSync(id, { type: 'png' });
-            if (index % 4 === 0 && index % 16 !== 0) {
-                x += 100;
-            } else if(index % 16 === 0 && index > 4) {
-                x = 20
-                doc.addPage();
-            }
-            const position = {
-                x,
-                y: (index % 4) * 100 + 20
-            }
-            doc.image(qr, 
-                position.x,
-                position.y,
-                {fit: [100, 100]},
-            )
-        })
-        doc.end();
-        let result = '';
-        stream.on('data', function(chunk) {
-            result += chunk;
-        });
-        return stream.on('finish', function () {
-            return resolve(result)
-        });
+    const dir = 'output.pdf'
+    doc.pipe(fs.createWriteStream(dir));
+    let x = 20;
+    // 16 qr codes per page
+    const itemsPerPage = 16;
+    const rows = Math.sqrt(itemsPerPage);
+    ids.map((id, index) => {
+        const newPage = index % itemsPerPage === 0
+        // new column
+        if (index % rows === 0 && !newPage) {
+            x += 100;
+        // new page and not first page
+        } else if (newPage & index > 4) {
+            x = 20
+            doc.addPage();
+        }
+        const qr = qrcode.imageSync(id, { type: 'png' });
+        const position = {
+            x,
+            y: (index % rows) * 100 + 20
+        }
+        doc.image(qr, 
+            position.x,
+            position.y,
+            {fit: [100, 100]},
+        )
     })
+    doc.end()
+    console.log(dir)
 }
 
 const ids = process.argv.slice(2)
-generatePdf(ids).then(pdf => console.log(pdf, 'QR code PDF has been generated'))
+generatePdf(ids)
